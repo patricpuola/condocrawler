@@ -1,0 +1,58 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model rental_listings {
+    id             Int      @id @default(autoincrement())
+    title          String
+    url            String
+    rent           Float
+    rent_unit      String?
+    image_url      String?
+    street_address String?
+    city           String?
+    postal_code    String?
+    borough        String?
+    site           String
+    site_uid       String
+    lat            Decimal?
+    lon            Decimal?
+    date_updated   DateTime @default(now())
+    date_created   DateTime @default(now())
+}
+
+model listings_history {
+    id           Int      @id @default(autoincrement())
+    property     String
+    old_value    String?
+    new_value    String?
+    site         String
+    site_uid     String
+    lat          Decimal?
+    lon          Decimal?
+    date_updated DateTime @default(now())
+}
+
+model sale_listings {
+    id             Int      @id @default(autoincrement())
+    title          String
+    url            String
+    price          Float
+    price_unit     String
+    image_url      String?
+    street_address String?
+    city           String?
+    postal_code    String?
+    borough        String?
+    site           String
+    site_uid       String
+    lat            Decimal?
+    lon            Decimal?
+    date_updated   DateTime @default(now())
+    date_created   DateTime @default(now())
+}
