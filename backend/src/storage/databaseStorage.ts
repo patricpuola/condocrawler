@@ -4,6 +4,7 @@ import mysql, { OkPacket } from 'mysql2/promise'
 import { rentalMapper, saleMapper } from './listingMapping'
 import { Listing, isRentalListing } from '../types/scraping'
 import { DistrictRow, districtGeoMapper } from './districtMapping'
+import { MunicipalityRow } from './municipalityMapping'
 
 const DEFAULT_LISTING_LIMIT = 30
 
@@ -268,7 +269,7 @@ export class DatabaseStorage extends BaseStorage {
 		return rows as DistrictRow[]
 	}
 
-	async findDistricts(longitude: number, latitude: number): Promise<DistrictRow[]> {
+	async getDistrictsByPoint(longitude: number, latitude: number): Promise<DistrictRow[]> {
 		const [rows, _] = await this.db.execute('SELECT * FROM districts WHERE ST_Contains(boundary, POINT(?, ?))', [
 			longitude,
 			latitude,
@@ -286,5 +287,35 @@ export class DatabaseStorage extends BaseStorage {
 			listing.id,
 		])
 		return (rows as OkPacket).affectedRows > 0
+	}
+
+	async saveDistrict(name: string, vendorId: string = '', districtId: string = '', boundaries: any) {
+		const [rows, _] = await this.db.execute('SELECT 1 FROM districts WHERE district_id = ? LIMIT 1', [districtId])
+		if (!Array.isArray(rows) || rows.length > 0) return
+
+		this.db.execute(
+			'INSERT INTO districts (name, vendor_id, district_id, boundary) VALUES (?, ?, ?, ST_GeomFromGeoJSON(?))',
+			[name, vendorId, districtId, JSON.stringify(boundaries)],
+		)
+	}
+
+	async saveMunicipality(name: string, vendorId: string, municipalityId: string, boundaries: any) {
+		const [rows, _] = await this.db.execute('SELECT 1 FROM municipalities WHERE municipality_id = ? LIMIT 1', [
+			municipalityId,
+		])
+		console.log(rows)
+		if (!Array.isArray(rows) || rows.length > 0) return
+
+		this.db.execute(
+			'INSERT INTO municipalities (name, vendor_id, municipality_id, boundary) VALUES (?, ?, ?, ST_GeomFromGeoJSON(?))',
+			[name, vendorId, municipalityId, JSON.stringify(boundaries)],
+		)
+	}
+
+	async getMunicipalities(): Promise<MunicipalityRow[]> {
+		const [rows, _] = await this.db.execute('SELECT * FROM municipalities')
+		if (!Array.isArray(rows)) return []
+
+		return rows as MunicipalityRow[]
 	}
 }

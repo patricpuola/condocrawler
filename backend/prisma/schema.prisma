@@ -60,9 +60,17 @@ model sale_listings {
 model districts {
     id              Int                      @id @default(autoincrement())
     vendor_id       String?
-    district_id     String?
+    district_id     String?                  @unique
     name            String?
     boundary        Unsupported("geometry")?
     sale_listings   sale_listings[]
     rental_listings rental_listings[]
+}
+
+model municipalities {
+    id              Int                      @id @default(autoincrement())
+    name            String?
+    vendor_id       String?
+    municipality_id String?                  @unique
+    boundary        Unsupported("geometry")?
 }

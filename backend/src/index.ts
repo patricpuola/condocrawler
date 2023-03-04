@@ -8,6 +8,8 @@ import yargs from 'yargs'
 import { getProgressBar } from './lib/cliHelper'
 import { DatabaseStorage } from './storage/databaseStorage'
 import { Listing } from './types/scraping'
+import * as municipalityBorders from './geojson/municipalityBorders.json'
+import * as districts from './geojson/districts.json'
 
 const run = async () => {
 	yargs.option('replay', {
@@ -35,6 +37,11 @@ const run = async () => {
 		description: 'recalculate which district a listing belongs to',
 	})
 
+	yargs.option('setup', {
+		type: 'boolean',
+		description: 'initial setup, fill database',
+	})
+
 	const options = await yargs.argv
 
 	if (options.api) startApi()
@@ -42,6 +49,7 @@ const run = async () => {
 	if (options.scrape) await scrape()
 	if (options.geocode) await geocode()
 	if (options.district) await district()
+	if (options.setup) await setup()
 
 	if (!options.api) process.exit(0)
 }
@@ -107,7 +115,7 @@ const district = async () => {
 	for (const listing of allListings) {
 		districtBar.increment({ entry: listing.streetAddress })
 		if (!listing.location) continue
-		const districts = await storage.findDistricts(listing.location.x, listing.location.y)
+		const districts = await storage.getDistrictsByPoint(listing.location.x, listing.location.y)
 		if (districts.length === 0) continue
 		if (districts.length === 1) {
 			await storage.updateListingDistrict(listing, districts[0].id)
@@ -121,6 +129,29 @@ const district = async () => {
 	districtBar.stop()
 
 	return
+}
+
+const setup = async () => {
+	const storage = new DatabaseStorage()
+	await storage.connect()
+
+	const municipalityBar = getProgressBar('Municipality', chalk.green)
+	municipalityBar.start(municipalityBorders.features.length, 0, { entry: '' })
+	for (const feat of municipalityBorders.features) {
+		const { nimi, kunta, tietopalvelu_id } = feat.properties
+		municipalityBar.increment({ entry: nimi || '' })
+		await storage.saveMunicipality(nimi, tietopalvelu_id.toString(), kunta, feat.geometry)
+	}
+	municipalityBar.stop()
+
+	const districtBar = getProgressBar('District', chalk.blue)
+	districtBar.start((districts as any).features.length, 0, { entry: '' })
+	for (const feat of (districts as any).features) {
+		const { nimi, kokotun, tietopalvelu_id } = feat.properties
+		districtBar.increment({ entry: nimi || '' })
+		await storage.saveDistrict(nimi, tietopalvelu_id.toString(), kokotun, feat.geometry)
+	}
+	districtBar.stop()
 }
 
 run()

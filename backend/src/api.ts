@@ -4,6 +4,7 @@ import { Request, Response } from 'express'
 import { DatabaseStorage } from './storage/databaseStorage'
 import chalk from 'chalk'
 import { districtGeoMapper } from './storage/districtMapping'
+import { municipalityGeoMapper } from './storage/municipalityMapping'
 
 export const startApi = () => {
 	const port = process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 3000
@@ -45,7 +46,19 @@ export const startApi = () => {
 		res.send({
 			name: 'Helsinki Region Districts',
 			type: 'FeatureCollection',
-			features: (districtRows as any[]).map(districtGeoMapper),
+			features: districtRows.map(districtGeoMapper),
+		} as GeoJSON.FeatureCollection)
+	})
+
+	app.get('/municipalities', cache('30 minutes'), async (req: Request, res: Response) => {
+		const storage = new DatabaseStorage()
+		await storage.connect()
+		const municipalityRows = await storage.getMunicipalities()
+
+		res.send({
+			name: 'Helsinki Region Districts',
+			type: 'FeatureCollection',
+			features: municipalityRows.map(municipalityGeoMapper),
 		} as GeoJSON.FeatureCollection)
 	})
 

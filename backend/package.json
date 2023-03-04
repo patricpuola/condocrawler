@@ -9,6 +9,7 @@
 		"api": "tsc && node build/index.js --api",
 		"geocode": "tsc && node build/index.js --geocode",
 		"district": "tsc && node build/index.js --district",
+		"setup": "tsc && node build/index.js --setup",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],

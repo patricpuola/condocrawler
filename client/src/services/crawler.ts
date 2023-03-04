@@ -16,9 +16,13 @@ export const crawlerApi = createApi({
 		getDistricts: builder.query<GeoJSON.FeatureCollection, void>({
 			query: () => 'districts',
 		}),
+		getMunicipalities: builder.query<GeoJSON.FeatureCollection, void>({
+			query: () => 'municipalities',
+		}),
 	}),
 })
 
 // Export hooks for usage in functional components, which are
 // auto-generated based on the defined endpoints
-export const { useGetRentalListingsQuery, useGetSaleListingsQuery, useGetDistrictsQuery } = crawlerApi
+export const { useGetRentalListingsQuery, useGetSaleListingsQuery, useGetDistrictsQuery, useGetMunicipalitiesQuery } =
+	crawlerApi

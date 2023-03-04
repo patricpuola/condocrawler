@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import mapboxgl, { MapboxGeoJSONFeature } from 'mapbox-gl'
-import { useGetDistrictsQuery, useGetRentalListingsQuery, useGetSaleListingsQuery } from '../services/crawler'
+import {
+	useGetDistrictsQuery,
+	useGetMunicipalitiesQuery,
+	useGetRentalListingsQuery,
+	useGetSaleListingsQuery,
+} from '../services/crawler'
 import { listingsToGeoJSON } from '../lib/mapHelper'
-import * as municipalityBorders from '../assets/municipalityBorders.json'
-import { FeatureCollection } from 'geojson'
 import { VisibilitySettings } from '../types/Visibility'
 
 const mapStyles = [
@@ -34,6 +37,7 @@ const Map = (props: Props) => {
 	const { data: rentalListings } = useGetRentalListingsQuery()
 	const { data: saleListings } = useGetSaleListingsQuery()
 	const { data: districts } = useGetDistrictsQuery()
+	const { data: municipalities } = useGetMunicipalitiesQuery()
 
 	let hoverDistrict: number | string | undefined
 
@@ -51,27 +55,30 @@ const Map = (props: Props) => {
 	}, [])
 
 	useEffect(() => {
-		if (!map || !districts) return
-		map.addSource('municipalityBorders', { type: 'geojson', data: municipalityBorders as FeatureCollection })
+		if (!map || !municipalities) return
+		map.addSource('municipalities', { type: 'geojson', data: municipalities })
 		map.addLayer({
 			id: 'municipality-line',
 			type: 'line',
-			source: 'municipalityBorders',
+			source: 'municipalities',
 			paint: { 'line-color': 'purple', 'line-width': 1 },
 		})
 		map.addLayer({
 			id: 'municipality-name',
 			type: 'symbol',
-			source: 'municipalityBorders',
+			source: 'municipalities',
 			layout: {
-				'text-field': ['get', 'nimi'],
+				'text-field': ['get', 'name'],
 				'text-size': 20,
 			},
 			paint: {
 				'text-opacity': 0.75,
 			},
 		})
+	}, [map, municipalities])
 
+	useEffect(() => {
+		if (!map || !districts) return
 		map.addSource('districts', { type: 'geojson', data: districts })
 		map.addLayer({
 			id: 'district-fill',
