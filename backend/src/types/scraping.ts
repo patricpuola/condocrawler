@@ -1,5 +1,5 @@
 import { RentalListing, SaleListing } from '../models/listing'
-import { DevDatabaseStorage } from '../storage/devDatabaseStorage'
+import { DatabaseStorage } from '../storage/databaseStorage'
 
 export type ScrapedPrice = {
 	price: number
@@ -24,8 +24,8 @@ type Right<U> = {
 
 export type Either<T, U> = NonNullable<Left<T> | Right<U>>
 
-export type SaveRentalFunction = DevDatabaseStorage['saveRentalListings']
-export type SaveSaleFunction = DevDatabaseStorage['saveSaleListings']
+export type SaveRentalFunction = DatabaseStorage['saveRentalListings']
+export type SaveSaleFunction = DatabaseStorage['saveSaleListings']
 
 export type Coordinates = {
 	lat: number

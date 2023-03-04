@@ -8,13 +8,13 @@ interface ListingRow {
 	street_address: string
 	city: string
 	postal_code: string
-	borough: string
+	district: string
 	site: string
 	site_uid: string
+	district_id: number | undefined
 	date_updated: string
 	date_created: string
-	lat: number
-	lon: number
+	location: { x: number; y: number }
 }
 
 interface RentalListingRow extends ListingRow {
@@ -37,13 +37,13 @@ export const rentalMapper = ({
 	street_address,
 	city,
 	postal_code,
-	borough,
+	district,
 	site,
 	site_uid,
 	date_updated,
 	date_created,
-	lat,
-	lon,
+	location,
+	district_id,
 }: RentalListingRow): RentalListing => ({
 	id,
 	title,
@@ -54,11 +54,11 @@ export const rentalMapper = ({
 	streetAddress: street_address,
 	city,
 	postalCode: postal_code,
-	borough,
+	district,
 	site,
 	siteUid: site_uid,
-	lat,
-	lon,
+	location,
+	districtId: district_id,
 	dateCreated: date_created,
 	dateUpdated: date_updated,
 })
@@ -73,13 +73,13 @@ export const saleMapper = ({
 	street_address,
 	city,
 	postal_code,
-	borough,
+	district,
 	site,
 	site_uid,
 	date_updated,
 	date_created,
-	lat,
-	lon,
+	location,
+	district_id,
 }: SaleListingRow): SaleListing => ({
 	id,
 	title,
@@ -90,11 +90,11 @@ export const saleMapper = ({
 	streetAddress: street_address,
 	city,
 	postalCode: postal_code,
-	borough,
+	district,
 	site,
 	siteUid: site_uid,
-	lat,
-	lon,
+	location,
+	districtId: district_id,
 	dateCreated: date_created,
 	dateUpdated: date_updated,
 })

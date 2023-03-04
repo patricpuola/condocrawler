@@ -5,17 +5,17 @@ import { GeoJSONSource, GeoJSONSourceRaw } from 'mapbox-gl'
 export const listingsToFeatureCollection = (listings: Listing[]): FeatureCollection => {
 	return {
 		type: 'FeatureCollection',
-		features: listings.map(({ id, title, city, borough, streetAddress, lat, lon }) => {
+		features: listings.map(({ id, title, city, district, streetAddress, location }) => {
 			return {
 				type: 'Feature',
 				geometry: {
 					type: 'Point',
-					coordinates: [lon, lat],
+					coordinates: [location.x, location.y],
 				},
 				properties: {
 					title,
 					city,
-					borough,
+					district,
 					streetAddress,
 				},
 				id,

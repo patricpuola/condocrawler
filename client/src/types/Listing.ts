@@ -8,9 +8,8 @@ export interface RentalListing {
 	streetAddress: string
 	city: string
 	postalCode: string
-	borough: string
-	lat: number
-	lon: number
+	district: string
+	location: { x: number; y: number }
 	site: string
 	siteUid: string
 	dateUpdated?: string
@@ -28,9 +27,8 @@ export interface SaleListing {
 	streetAddress: string
 	city: string
 	postalCode: string
-	borough: string
-	lat: number
-	lon: number
+	district: string
+	location: { x: number; y: number }
 	site: string
 	siteUid: string
 	dateUpdated?: string

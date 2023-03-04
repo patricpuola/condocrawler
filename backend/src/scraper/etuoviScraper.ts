@@ -59,6 +59,9 @@ export class EtuoviScraper extends BaseScraper {
 				throw e
 			}
 		} while (await this.moreResults(driver))
+
+		await driver.close()
+		return
 	}
 
 	async process(params: EtuoviProcessParams): Promise<SaleListing[]> {
@@ -69,7 +72,7 @@ export class EtuoviScraper extends BaseScraper {
 		$(`.${commonListingClass}`).each((_, elem) => {
 			const title = $(elem).find('div h5').first().text()
 			const url = $(elem).find('div a').first().attr('href') || ''
-			const { streetAddress, borough, city } = this.parseAddress($(elem).find('div h4').first().text())
+			const { streetAddress, district, city } = this.parseAddress($(elem).find('div h4').first().text())
 			const imageUrl = $(elem).find('div img').first().attr('src') || ''
 			const priceText = $(elem)
 				.find('h6')
@@ -89,9 +92,7 @@ export class EtuoviScraper extends BaseScraper {
 				streetAddress,
 				city,
 				postalCode: '12345',
-				borough,
-				lat: null,
-				lon: null,
+				district,
 				site: this.site,
 				siteUid: this.parseUid(url),
 			})
@@ -111,11 +112,11 @@ export class EtuoviScraper extends BaseScraper {
 	}
 
 	parseAddress(addressBlob: string | undefined) {
-		if (!addressBlob) return { streetAddress: '', borough: '', city: '' }
-		const [streetAddress, borough, city] = addressBlob
+		if (!addressBlob) return { streetAddress: '', district: '', city: '' }
+		const [streetAddress, district, city] = addressBlob
 			.split(',', 3)
 			.map(s => capitalizeFirstLetter(s.trim()).replace(/\s{2,}/, ' '))
-		return { streetAddress, borough, city }
+		return { streetAddress, district, city }
 	}
 
 	parseUid(link: string | undefined): string {

@@ -49,6 +49,9 @@ export class VuokraoviScraper extends BaseScraper {
 				throw e
 			}
 		} while (await this.moreResults(driver))
+
+		await driver.close()
+		return
 	}
 
 	async process(params: VuokraoviProcessParams): Promise<RentalListing[]> {
@@ -82,7 +85,7 @@ export class VuokraoviScraper extends BaseScraper {
 				.children('img')
 				.first()
 			const imageUrl = image.attr('src') ?? ''
-			const { streetAddress, borough, city } = this.parseAddress(image.attr('alt'))
+			const { streetAddress, district, city } = this.parseAddress(image.attr('alt'))
 			const siteUid = this.parseUid($(elem).find('.list-item-link').attr('href'))
 
 			listings.push({
@@ -92,10 +95,8 @@ export class VuokraoviScraper extends BaseScraper {
 				rentUnit: unit,
 				imageUrl,
 				streetAddress,
-				borough,
+				district,
 				city,
-				lat: null,
-				lon: null,
 				site: this.site,
 				siteUid,
 				postalCode: '12345',
@@ -123,11 +124,11 @@ export class VuokraoviScraper extends BaseScraper {
 	}
 
 	parseAddress(addressBlob: string | undefined) {
-		if (!addressBlob) return { streetAddress: '', borough: '', city: '' }
-		const [streetAddress, borough, city] = addressBlob
+		if (!addressBlob) return { streetAddress: '', district: '', city: '' }
+		const [streetAddress, district, city] = addressBlob
 			.split(',', 3)
 			.map(s => capitalizeFirstLetter(s.trim().replace(/\s{2,}/, ' ')))
-		return { streetAddress, borough, city }
+		return { streetAddress, district, city }
 	}
 
 	parseUid(link: string | undefined): string {

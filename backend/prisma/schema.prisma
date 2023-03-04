@@ -3,27 +3,28 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "mysql"
     url      = env("DATABASE_URL")
 }
 
 model rental_listings {
-    id             Int      @id @default(autoincrement())
-    title          String
-    url            String
-    rent           Float
-    rent_unit      String?
-    image_url      String?
-    street_address String?
-    city           String?
-    postal_code    String?
-    borough        String?
-    site           String
-    site_uid       String
-    lat            Decimal?
-    lon            Decimal?
-    date_updated   DateTime @default(now())
-    date_created   DateTime @default(now())
+    id               Int                      @id @default(autoincrement())
+    title            String
+    url              String
+    rent             Float
+    rent_unit        String?
+    image_url        String?
+    street_address   String?
+    city             String?
+    postal_code      String?
+    district         String?
+    location         Unsupported("geometry")?
+    district_id      Int?
+    site             String
+    site_uid         String
+    date_updated     DateTime                 @default(now())
+    date_created     DateTime                 @default(now())
+    districtRelation districts?               @relation(fields: [district_id], references: [id])
 }
 
 model listings_history {
@@ -33,26 +34,35 @@ model listings_history {
     new_value    String?
     site         String
     site_uid     String
-    lat          Decimal?
-    lon          Decimal?
     date_updated DateTime @default(now())
 }
 
 model sale_listings {
-    id             Int      @id @default(autoincrement())
-    title          String
-    url            String
-    price          Float
-    price_unit     String
-    image_url      String?
-    street_address String?
-    city           String?
-    postal_code    String?
-    borough        String?
-    site           String
-    site_uid       String
-    lat            Decimal?
-    lon            Decimal?
-    date_updated   DateTime @default(now())
-    date_created   DateTime @default(now())
+    id               Int                      @id @default(autoincrement())
+    title            String
+    url              String
+    price            Float
+    price_unit       String
+    image_url        String?
+    street_address   String?
+    city             String?
+    postal_code      String?
+    district         String?
+    site             String
+    site_uid         String
+    location         Unsupported("geometry")?
+    district_id      Int?
+    date_updated     DateTime                 @default(now())
+    date_created     DateTime                 @default(now())
+    districtRelation districts?               @relation(fields: [district_id], references: [id])
+}
+
+model districts {
+    id              Int                      @id @default(autoincrement())
+    vendor_id       String?
+    district_id     String?
+    name            String?
+    boundary        Unsupported("geometry")?
+    sale_listings   sale_listings[]
+    rental_listings rental_listings[]
 }

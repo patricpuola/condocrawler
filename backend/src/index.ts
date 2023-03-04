@@ -4,9 +4,10 @@ import { runReplay } from './lib/replay'
 import { EtuoviScraper } from './scraper/etuoviScraper'
 import { VuokraoviScraper } from './scraper/vuokraoviScraper'
 import { getCoordinates } from './services/geocode'
-import { DevDatabaseStorage } from './storage/devDatabaseStorage'
 import yargs from 'yargs'
 import { getProgressBar } from './lib/cliHelper'
+import { DatabaseStorage } from './storage/databaseStorage'
+import { Listing } from './types/scraping'
 
 const run = async () => {
 	yargs.option('replay', {
@@ -29,23 +30,33 @@ const run = async () => {
 		description: 'run geocoder',
 	})
 
+	yargs.option('district', {
+		type: 'boolean',
+		description: 'recalculate which district a listing belongs to',
+	})
+
 	const options = await yargs.argv
 
-	if (options.replay) replay()
-	if (options.api) await startApi()
-	if (options.scrape) scrape()
-	if (options.geocode) geocode()
+	if (options.api) startApi()
+	if (options.replay) await replay()
+	if (options.scrape) await scrape()
+	if (options.geocode) await geocode()
+	if (options.district) await district()
+
+	if (!options.api) process.exit(0)
 }
 
 const replay = async () => await runReplay()
 
 const scrape = async () => {
-	const storage = new DevDatabaseStorage()
+	const storage = new DatabaseStorage()
+	await storage.connect()
 	await Promise.all([new VuokraoviScraper(storage).scrape(), new EtuoviScraper(storage).scrape()])
 }
 
 const geocode = async () => {
-	const storage = new DevDatabaseStorage()
+	const storage = new DatabaseStorage()
+	await storage.connect()
 	const addresses = await Promise.all([
 		storage.getRentalAddressesWithoutCoordinates(),
 		storage.getSaleAddressesWithoutCoordinates(),
@@ -57,7 +68,7 @@ const geocode = async () => {
 		rentalBar.increment({ entry: rentalListing.streetAddress })
 		const coords = await getCoordinates(`${rentalListing.streetAddress}, ${rentalListing.city}, Finland`)
 		if (coords) {
-			await storage.saveRentalCoordinates({ ...rentalListing, ...coords })
+			await storage.saveRentalCoordinates({ ...rentalListing, location: { x: coords.lon, y: coords.lat } })
 		}
 	}
 	rentalBar.stop()
@@ -68,10 +79,48 @@ const geocode = async () => {
 		saleBar.increment({ entry: saleListing.streetAddress })
 		const coords = await getCoordinates(`${saleListing.streetAddress}, ${saleListing.city}, Finland`)
 		if (coords) {
-			await storage.saveSaleCoordinates({ ...saleListing, ...coords })
+			await storage.saveSaleCoordinates({ ...saleListing, location: { x: coords.lon, y: coords.lat } })
 		}
 	}
 	saleBar.stop()
+}
+
+const district = async () => {
+	const storage = new DatabaseStorage()
+	await storage.connect()
+
+	const [rentalListings, saleListings] = await Promise.all([
+		storage.getRentalListings(null),
+		storage.getSaleListings(null),
+	])
+
+	if (rentalListings.length === 0 && saleListings.length === 0) {
+		console.log(chalk.red('no listings found in database'))
+		return
+	}
+
+	const allListings = (rentalListings as Listing[]).concat(saleListings as Listing[])
+
+	const districtBar = getProgressBar('Districts', chalk.magenta)
+	districtBar.start(allListings.length, 0, { entry: '' })
+
+	for (const listing of allListings) {
+		districtBar.increment({ entry: listing.streetAddress })
+		if (!listing.location) continue
+		const districts = await storage.findDistricts(listing.location.x, listing.location.y)
+		if (districts.length === 0) continue
+		if (districts.length === 1) {
+			await storage.updateListingDistrict(listing, districts[0].id)
+		} else {
+			const districtWithName = districts.find(district => !!district.name?.length)
+			if (districtWithName) {
+				await storage.updateListingDistrict(listing, districtWithName.id)
+			}
+		}
+	}
+	districtBar.stop()
+
+	return
 }
 
 run()

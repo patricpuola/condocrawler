@@ -1,8 +1,9 @@
 import express from 'express'
 import apicache from 'apicache'
 import { Request, Response } from 'express'
-import { DevDatabaseStorage } from './storage/devDatabaseStorage'
+import { DatabaseStorage } from './storage/databaseStorage'
 import chalk from 'chalk'
+import { districtGeoMapper } from './storage/districtMapping'
 
 export const startApi = () => {
 	const port = process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 3000
@@ -23,15 +24,29 @@ export const startApi = () => {
 	app.get('/listings/rental', cache('30 minutes'), async (req: Request, res: Response) => {
 		const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined
 
-		const storage = new DevDatabaseStorage()
+		const storage = new DatabaseStorage()
+		await storage.connect()
 		res.send(await storage.getRentalListings(limit))
 	})
 
 	app.get('/listings/sale', cache('30 minutes'), async (req: Request, res: Response) => {
 		const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined
 
-		const storage = new DevDatabaseStorage()
+		const storage = new DatabaseStorage()
+		await storage.connect()
 		res.send(await storage.getSaleListings(limit))
+	})
+
+	app.get('/districts', cache('30 minutes'), async (req: Request, res: Response) => {
+		const storage = new DatabaseStorage()
+		await storage.connect()
+		const districtRows = await storage.getDistricts()
+
+		res.send({
+			name: 'Helsinki Region Districts',
+			type: 'FeatureCollection',
+			features: (districtRows as any[]).map(districtGeoMapper),
+		} as GeoJSON.FeatureCollection)
 	})
 
 	app.listen(port, host, () => console.log(chalk.blue('Server running on ') + chalk.yellow(`http://${host}:${port}`)))
