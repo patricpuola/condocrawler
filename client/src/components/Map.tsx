@@ -7,8 +7,9 @@ import {
 	useGetRentalListingsQuery,
 	useGetSaleListingsQuery,
 } from '../services/crawler'
-import { listingsToGeoJSON } from '../lib/mapHelper'
+import { colorDistricts, getStatistics, listingsToGeoJSON } from '../lib/mapHelper'
 import { VisibilitySettings } from '../types/Visibility'
+import { PriceDataByDistrict, PriceData } from '../types/Statistics'
 
 const mapStyles = [
 	'streets-v12',
@@ -34,6 +35,13 @@ const Map = (props: Props) => {
 		municipalities: true,
 	})
 	const [districtSelection, setDistrictSelection] = useState<MapboxGeoJSONFeature>()
+	const [rentalStatistics, setRentalStatistics] = useState<PriceDataByDistrict>()
+	const [saleStatistics, setSaleStatistics] = useState<PriceDataByDistrict>()
+	const [selectedDistrictInfo, setSelectedDistrictInfo] = useState<{
+		name: string
+		rental: PriceData
+		sale: PriceData
+	}>()
 	const { data: rentalListings } = useGetRentalListingsQuery()
 	const { data: saleListings } = useGetSaleListingsQuery()
 	const { data: districts } = useGetDistrictsQuery()
@@ -78,15 +86,16 @@ const Map = (props: Props) => {
 	}, [map, municipalities])
 
 	useEffect(() => {
-		if (!map || !districts) return
-		map.addSource('districts', { type: 'geojson', data: districts })
+		if (!map || !districts || !saleStatistics || !rentalStatistics) return
+		const coloredDistricts = colorDistricts(districts, saleStatistics, rentalStatistics)
+		map.addSource('districts', { type: 'geojson', data: coloredDistricts })
 		map.addLayer({
 			id: 'district-fill',
 			type: 'fill',
 			source: 'districts',
 			paint: {
-				'fill-color': 'purple',
-				'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.2, 0.05],
+				'fill-color': ['get', 'rentalColor'],
+				'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.2, 0.6],
 			},
 		})
 		map.addLayer({
@@ -136,7 +145,18 @@ const Map = (props: Props) => {
 	}, [map, districts])
 
 	useEffect(() => {
+		if (!rentalListings) return
+		setSaleStatistics(getStatistics(rentalListings))
+	}, [rentalListings])
+
+	useEffect(() => {
+		if (!saleListings) return
+		setSaleStatistics(getStatistics(saleListings))
+	}, [saleListings])
+
+	useEffect(() => {
 		if (!map || !rentalListings) return
+		setRentalStatistics(getStatistics(rentalListings))
 		map.addSource('rentalListings', listingsToGeoJSON(rentalListings))
 		map.addLayer({
 			id: 'rentalListings-circles',
@@ -193,7 +213,24 @@ const Map = (props: Props) => {
 		map.setStyle(`mapbox://styles/mapbox/${style}`)
 	}, [style])
 
-	useEffect(() => {}, [])
+	useEffect(() => {
+		if (!districtSelection || !rentalStatistics || !saleStatistics) return
+		if (typeof districtSelection.id !== 'number') return
+		const emptyPriceData: PriceData = {
+			count: 0,
+			low: 0,
+			high: 0,
+			median: 0,
+			lowPerSquareMeter: 0,
+			highPerSquareMeter: 0,
+			medianPerSquareMeter: 0,
+		}
+		setSelectedDistrictInfo({
+			name: districtSelection.properties?.name,
+			rental: rentalStatistics?.districts.get(districtSelection.id) || emptyPriceData,
+			sale: saleStatistics?.districts.get(districtSelection.id) || emptyPriceData,
+		})
+	}, [districtSelection])
 
 	return (
 		<div className="h-full w-full bg-green-200">
@@ -271,7 +308,30 @@ const Map = (props: Props) => {
 					</div>
 				</div>
 				<div id="selection" className="bg-stone-100  rounded-md shadow p-3">
-					{districtSelection ? districtSelection.properties?.name : 'no selection'}
+					<div className="text-xl text-center">{selectedDistrictInfo?.name || 'no selection'}</div>
+					{selectedDistrictInfo && (
+						<div>
+							<div className="text-xl">Sale ({selectedDistrictInfo.sale.count})</div>
+							<div className="grid grid-cols-2 pl-1">
+								<div>High</div>
+								<div>{selectedDistrictInfo.sale.high}</div>
+								<div>Median</div>
+								<div>{selectedDistrictInfo.sale.median}</div>
+								<div>Low</div>
+								<div>{selectedDistrictInfo.sale.low}</div>
+							</div>
+							<hr />
+							<div className="text-xl">Rental ({selectedDistrictInfo.rental.count})</div>
+							<div className="grid grid-cols-2 pl-1">
+								<div>High</div>
+								<div>{selectedDistrictInfo.rental.high}</div>
+								<div>Median</div>
+								<div>{selectedDistrictInfo.rental.median}</div>
+								<div>Low</div>
+								<div>{selectedDistrictInfo.rental.low}</div>
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 			<div ref={mapNode} className="w-full h-full"></div>

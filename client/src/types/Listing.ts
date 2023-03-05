@@ -1,3 +1,7 @@
+export const isRentalListing = (listing: Listing): listing is RentalListing => Object.keys(listing).includes('rent')
+
+export const isSaleListing = (listing: Listing): listing is SaleListing => Object.keys(listing).includes('price')
+
 export interface RentalListing {
 	id?: number
 	title: string
@@ -12,9 +16,9 @@ export interface RentalListing {
 	location: { x: number; y: number }
 	site: string
 	siteUid: string
+	districtId: number
 	dateUpdated?: string
 	dateCreated?: string
-	// add other properties as needed
 }
 
 export interface SaleListing {
@@ -31,9 +35,9 @@ export interface SaleListing {
 	location: { x: number; y: number }
 	site: string
 	siteUid: string
+	districtId: number
 	dateUpdated?: string
 	dateCreated?: string
-	// add other properties as needed
 }
 
 export type Listing = RentalListing | SaleListing
