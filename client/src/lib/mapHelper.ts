@@ -114,9 +114,9 @@ export const colorDistricts = (
 			rentalColor = `hsl(${rentalHue}, 100%, 50%)`
 		}
 
-		if (rentalStatistics.districts.has(districtId)) {
+		if (saleStatistics.districts.has(districtId)) {
 			const salePercentage =
-				(rentalStatistics.districts.get(districtId)?.median || 0 - saleStatistics.low) / salePriceRange
+				(saleStatistics.districts.get(districtId)?.median || 0 - saleStatistics.low) / salePriceRange
 			const saleHue = Math.floor(480 - salePercentage * 240)
 			saleColor = `hsl(${saleHue}, 100%, 50%)`
 		}
@@ -124,6 +124,7 @@ export const colorDistricts = (
 		return { rentalColor, saleColor }
 	}
 
+	// properties is readonly, so we create a new object
 	return {
 		...districts,
 		features: districts.features.map(feature =>
