@@ -5,6 +5,7 @@ import { rentalMapper, saleMapper } from './listingMapping'
 import { Listing, isRentalListing } from '../types/scraping'
 import { DistrictRow, districtGeoMapper } from './districtMapping'
 import { MunicipalityRow } from './municipalityMapping'
+import chalk from 'chalk'
 
 const DEFAULT_LISTING_LIMIT = 30
 
@@ -16,12 +17,17 @@ export class DatabaseStorage extends BaseStorage {
 	}
 
 	async connect(): Promise<void> {
-		this.db = await mysql.createConnection({
-			host: process.env.MYSQL_HOST,
-			user: process.env.MYSQL_USER,
-			database: process.env.MYSQL_DB,
-			password: process.env.MYSQL_PASS,
-		})
+		try {
+			this.db = await mysql.createConnection({
+				host: process.env.MYSQL_HOST,
+				user: process.env.MYSQL_USER,
+				database: process.env.MYSQL_DB,
+				password: process.env.MYSQL_PASS,
+			})
+		} catch (e) {
+			console.log(chalk.red(`Cannot connect to database at ${process.env.MYSQL_HOST}, exiting...`))
+			process.exit(1)
+		}
 	}
 
 	validNewListing({ city, streetAddress, site, siteUid }: Listing): Boolean {

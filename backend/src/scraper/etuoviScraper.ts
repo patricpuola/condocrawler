@@ -1,5 +1,13 @@
 import { By, Key, WebDriver } from 'selenium-webdriver'
-import { dismissPrompt, findButton, findCommonClass, wait, waitFor, waitForElementText } from '../lib/driverHelper'
+import {
+	dismissPrompt,
+	findButton,
+	findCommonClass,
+	wait,
+	waitFor,
+	waitForElementText,
+	waitForPageLoad,
+} from '../lib/driverHelper'
 import { getChromeDriver } from '../lib/webDriver'
 import { SaleListing } from '../models/listing'
 import { BaseScraper } from './baseScraper'
@@ -40,13 +48,16 @@ export class EtuoviScraper extends BaseScraper {
 		await search.sendKeys('Helsinki')
 		await wait(1000)
 		await search.sendKeys(Key.ENTER)
-		const button = await findButton(driver, By.css('button[type="submit"]'), 'HAE')
-		button.click()
+		;(await findButton(driver, By.css('button.MuiButton-text'), 'Lisää hakuehtoja')).click()
+		await wait(1500)
+		;(
+			await findButton(driver, By.css('label.MuiFormControlLabel-labelPlacementEnd'), 'Omistusasunto', true)
+		).click()
+		await wait(500)
+		;(await findButton(driver, By.css('button[type="submit"]'), 'Näytä kohteet')).click()
 
-		await waitFor(driver, By.id('listPagePopper'))
-		const listPagePopper = await driver.findElement(By.id('listPagePopper'))
-		const listItems = await listPagePopper.findElements(By.xpath('following-sibling::div'))
-
+		await waitForElementText(driver, By.id('searchResultCount'), /\d+/)
+		const listItems = await driver.findElements(By.css('div[class*="ListPage__cardContainer"'))
 		const commonListingClass = await findCommonClass(listItems)
 
 		do {
@@ -71,7 +82,7 @@ export class EtuoviScraper extends BaseScraper {
 
 		$(`.${commonListingClass}`).each((_, elem) => {
 			const title = $(elem).find('div h5').first().text()
-			const url = $(elem).find('div a').first().attr('href') || ''
+			const url = $(elem).find('div a').first().attr('href')?.split('?')[0] || ''
 			const { streetAddress, district, city } = this.parseAddress($(elem).find('div h4').first().text())
 			const imageUrl = $(elem).find('div img').first().attr('src') || ''
 			const priceText = $(elem)

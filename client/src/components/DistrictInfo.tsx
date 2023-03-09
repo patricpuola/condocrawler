@@ -20,7 +20,7 @@ const DistrictInfo = ({ district, rentalStatistics, saleStatistics }: Props) => 
 	const formatter = new Intl.NumberFormat('fi-FI', {
 		style: 'currency',
 		currency: 'EUR',
-		maximumSignificantDigits: 2,
+		maximumFractionDigits: 0,
 	})
 
 	if (!district) {
@@ -41,7 +41,7 @@ const DistrictInfo = ({ district, rentalStatistics, saleStatistics }: Props) => 
 
 	return (
 		<div id="selection" className="bg-stone-100 rounded-md shadow p-3">
-			<div className="text-xl text-center">{district.properties?.name || 'unknown district'}</div>
+			<div className="text-xl text-center font-bold">{district.properties?.name || 'unknown district'}</div>
 			<div>
 				<div className="text-xl">Sale ({saleData.count})</div>
 				<div className="grid grid-cols-2 pl-1">

@@ -10,7 +10,7 @@ import {
 } from '../services/crawler'
 import { getStatistics } from '../lib/mapHelper'
 import { VisibilitySettings } from '../types/Visibility'
-import { PriceDataByDistrict, PriceData } from '../types/Statistics'
+import { PriceDataByDistrict } from '../types/Statistics'
 import Districts from './Districts'
 import Municipalities from './Municipalities'
 import Listings from './Listings'
@@ -18,22 +18,14 @@ import DistrictInfo from './DistrictInfo'
 import Visibility from './Visibility'
 import { DistrictHighlightOption } from '../types/DistrictHighlights'
 import DistrictHighlightSelector from './DistrictHighlightSelector'
-
-const mapStyles = [
-	'streets-v12',
-	'outdoors-v12',
-	'light-v11',
-	'dark-v11',
-	'satellite-v9',
-	'satellite-streets-v12',
-	'navigation-day-v1',
-	'navigation-night-v1',
-] as const
+import MapStyleSelect from './MapStyleSelect'
+import { MapStyle, mapStyles } from '../types/Map'
+import Legend from './Legend'
 
 type Props = {}
 
 const MapContainer = (props: Props) => {
-	const [style, setStyle] = useState<(typeof mapStyles)[number]>('streets-v12')
+	const [style, setStyle] = useState<MapStyle>('streets-v12')
 	const [visibilitySettings, setVisibilitySettings] = useState<VisibilitySettings>({
 		rentalListings: true,
 		saleListings: true,
@@ -61,22 +53,16 @@ const MapContainer = (props: Props) => {
 	}, [saleListings])
 
 	return (
-		<div className="h-full w-full bg-green-200">
+		<div className="h-full w-full bg-gray-500">
 			<div id="side-panel" className="absolute z-10 top-5 right-5 grid gap-2">
-				<div className="bg-stone-100  rounded-md shadow p-3">
-					<h1 className="text-xl font-bold">Condo Crawler 0.2</h1>
+				<div className="bg-stone-100 rounded-md shadow p-3">
+					<h1 className="text-xl font-bold">Condo Crawler 0.3</h1>
 					<hr />
 					<Visibility settings={visibilitySettings} setSettings={setVisibilitySettings} />
 					<hr />
-					<div className="grid">
-						<h2 className="mb-2">Map style</h2>
-						<select onChange={e => setStyle(e.target.value as (typeof mapStyles)[number])}>
-							{mapStyles.map(style => (
-								<option>{style}</option>
-							))}
-						</select>
-					</div>
+					<MapStyleSelect mapStyles={mapStyles} setStyle={setStyle} style={style} />
 					<DistrictHighlightSelector highlight={listingHighlight} setHighlight={setListingHighlight} />
+					<Legend />
 				</div>
 				{saleStatistics && rentalStatistics && (
 					<DistrictInfo
@@ -102,6 +88,7 @@ const MapContainer = (props: Props) => {
 						rentalStatistics={rentalStatistics}
 						visible={visibilitySettings.districts}
 						listingHighlight={listingHighlight}
+						selectedDistrict={selectedDistrict}
 						setSelectedDistrict={setSelectedDistrict}
 					/>
 				)}
@@ -110,7 +97,7 @@ const MapContainer = (props: Props) => {
 						id="rentalListings"
 						listings={rentalListings}
 						visible={visibilitySettings.rentalListings}
-						color="red"
+						color="orange"
 					/>
 				)}
 				{saleListings && (
@@ -118,7 +105,7 @@ const MapContainer = (props: Props) => {
 						id="saleListings"
 						listings={saleListings}
 						visible={visibilitySettings.saleListings}
-						color="green"
+						color="skyblue"
 					/>
 				)}
 			</Map>

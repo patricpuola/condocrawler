@@ -8,10 +8,10 @@ export const crawlerApi = createApi({
 	baseQuery: retry(fetchBaseQuery({ baseUrl: 'http://localhost:3000/' }), { maxRetries: 2 }),
 	endpoints: builder => ({
 		getRentalListings: builder.query<RentalListing[], void>({
-			query: () => 'listings/rental?limit=200',
+			query: () => 'listings/rental?limit=1000',
 		}),
 		getSaleListings: builder.query<SaleListing[], void>({
-			query: () => 'listings/sale?limit=200',
+			query: () => 'listings/sale?limit=1000',
 		}),
 		getDistricts: builder.query<GeoJSON.FeatureCollection, void>({
 			query: () => 'districts',

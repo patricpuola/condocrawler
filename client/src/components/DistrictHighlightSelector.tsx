@@ -9,7 +9,7 @@ type Props = {
 const DistrictHighlightSelector = ({ highlight, setHighlight }: Props) => {
 	return (
 		<div>
-			<h2 className="mb-2">District Color</h2>
+			<h2 className="my-2 font-bold">District Color</h2>
 			<div className="grid">
 				{DistrictHighlights.map((highlightOption, idx) => (
 					<div>

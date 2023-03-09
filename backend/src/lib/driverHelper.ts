@@ -1,4 +1,5 @@
 import { By, Locator, WebDriver, WebElement, until } from 'selenium-webdriver'
+import { asyncFilter } from './generalHelpers'
 
 export const safeFindElement = async (
 	context: WebDriver | WebElement,
@@ -61,6 +62,7 @@ export const waitForElementText = async (
 	timeout: number = 5000,
 ) => {
 	try {
+		await driver.wait(until.elementLocated(locator))
 		const element = await driver.findElement(locator)
 		await driver.wait(until.elementTextMatches(element, regex), timeout)
 	} catch {
@@ -80,16 +82,36 @@ export const wait = async (timeout: number) => {
 	return new Promise(resolve => setTimeout(resolve, timeout))
 }
 
-export const findButton = async (driver: WebDriver, locator: Locator, text: string): Promise<WebElement> => {
+export const findButton = async (
+	driver: WebDriver,
+	locator: Locator,
+	text: string,
+	scrollTo: boolean = false,
+): Promise<WebElement> => {
 	const findText = text.toLowerCase()
 	const buttons = await driver.findElements(locator)
-	const matchingButtons = buttons.filter(async btn => (await btn.getText()).toLowerCase().includes(findText))
+	const matchingButtons = await asyncFilter(buttons, async btn =>
+		(await btn.getText()).toLowerCase().includes(findText),
+	)
+
+	/*const matchingButtons = buttons.filter(async btn => {
+		return (await btn.getText()).toLowerCase().includes(findText)
+	})*/
+
 	if (matchingButtons.length == 0) {
-		throw new Error(`findButton() could not find ${locator.toString} with text "${text}"`)
+		throw new Error(`findButton() could not find ${locator.toString()} with text "${text}"`)
 	}
 	if (matchingButtons.length > 1) {
-		console.warn(`findButton() found more than one ${locator.toString} with text "${text}"`)
+		console.warn(`findButton() found more than one ${locator.toString()} with text "${text}"`)
 	}
+
+	if (scrollTo) {
+		const buffer = 300
+		const { y } = await matchingButtons[0].getRect()
+		const scrollY = y < 300 ? y : y - 300
+		await driver.executeScript(`window.scrollTo(0, ${scrollY})`)
+	}
+
 	return matchingButtons[0]
 }
 

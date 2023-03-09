@@ -11,6 +11,7 @@ type Props = {
 	rentalStatistics: PriceDataByDistrict
 	visible: boolean
 	listingHighlight: 'none' | 'sale' | 'rental'
+	selectedDistrict: MapboxGeoJSONFeature | undefined
 	setSelectedDistrict: (district: MapboxGeoJSONFeature) => void
 }
 
@@ -20,6 +21,7 @@ const Districts = ({
 	rentalStatistics,
 	visible,
 	listingHighlight,
+	selectedDistrict,
 	setSelectedDistrict,
 }: Props) => {
 	const { current: map } = useMap()
@@ -51,7 +53,13 @@ const Districts = ({
 		})
 
 		map.on('click', 'district-fill', e => {
-			if (e.features) setSelectedDistrict(e.features[0])
+			selectedDistrict &&
+				map.setFeatureState({ source: 'districts', id: selectedDistrict.id }, { selected: false })
+			if (e.features) {
+				const district = e.features[0]
+				setSelectedDistrict(district)
+				map.setFeatureState({ source: 'districts', id: district.id }, { selected: true })
+			}
 		})
 
 		console.log('districts done')
@@ -77,8 +85,8 @@ const Districts = ({
 							['boolean', ['feature-state', 'hover'], false],
 							['match', ['get', 'districtColor'], 'rental', false, 'sale', false, true],
 						],
-						0.2,
-						0.6,
+						0.1,
+						0.4,
 					],
 				}}
 			></Layer>
@@ -100,6 +108,7 @@ const Districts = ({
 					'text-field': ['get', 'name'],
 					visibility: visible ? 'visible' : 'none',
 				}}
+				paint={{ 'text-color': 'rgb(50,50,50)' }}
 			></Layer>
 		</Source>
 	)

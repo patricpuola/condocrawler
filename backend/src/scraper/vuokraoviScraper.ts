@@ -59,7 +59,6 @@ export class VuokraoviScraper extends BaseScraper {
 		const { pageSource } = params
 		const $ = load(pageSource)
 
-		// Extract data for each listing on the page using cheerio and add it to the listings array
 		$('.list-item-container').each((_, elem) => {
 			const details = $(elem)
 				.children('div')

@@ -9,7 +9,7 @@ type Props = {
 const Visibility = ({ settings, setSettings }: Props) => {
 	return (
 		<div className="grid">
-			<h2 className="mb-2">Overlays</h2>
+			<h2 className="my-2 font-bold">Overlays</h2>
 			{Object.keys(settings).map(setting => (
 				<label className="cursor-pointer select-none">
 					<input
