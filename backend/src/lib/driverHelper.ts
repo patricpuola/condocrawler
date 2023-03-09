@@ -94,10 +94,6 @@ export const findButton = async (
 		(await btn.getText()).toLowerCase().includes(findText),
 	)
 
-	/*const matchingButtons = buttons.filter(async btn => {
-		return (await btn.getText()).toLowerCase().includes(findText)
-	})*/
-
 	if (matchingButtons.length == 0) {
 		throw new Error(`findButton() could not find ${locator.toString()} with text "${text}"`)
 	}
@@ -108,7 +104,7 @@ export const findButton = async (
 	if (scrollTo) {
 		const buffer = 300
 		const { y } = await matchingButtons[0].getRect()
-		const scrollY = y < 300 ? y : y - 300
+		const scrollY = y < buffer ? y : y - buffer
 		await driver.executeScript(`window.scrollTo(0, ${scrollY})`)
 	}
 
